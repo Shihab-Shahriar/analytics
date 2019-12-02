@@ -1,9 +1,8 @@
 from collections import defaultdict
 import numpy as np
 import pandas as pd
-from sklearn.metrics import roc_auc_score
-from sklearn.preprocessing import MinMaxScaler, LabelEncoder
-from imblearn.metrics import geometric_mean_score
+from sklearn.preprocessing import MinMaxScaler, power_transform
+from sklearn.utils import shuffle
 
 
 file = """AvgCyclomatic, AvgCyclomaticModified, AvgCyclomaticStrict, AvgEssential, AvgLine, AvgLineBlank, AvgLineCode, AvgLineComment, CountDeclClass, CountDeclClassMethod, CountDeclClassVariable, CountDeclFunction, CountDeclInstanceMethod,
@@ -24,10 +23,12 @@ all_metrics = set(code_metrics) | set(own_metrics) | set(process_metrics)
 def read_data(file,stats=True):
     df = pd.read_csv("JIRA/"+file)
     df.drop(columns=["File",'HeuBugCount','RealBugCount'],inplace=True)
+    df = shuffle(df)
     X = df[all_metrics].values.astype('float64')
     y_noisy = df.HeuBug.values.astype('int8')
     y_real = df.RealBug.values.astype('int8')
-    X = MinMaxScaler().fit_transform(X)
+    X = np.log1p(X)                      #INFORMATION LEAK, could also use power_transform
+    #X = MinMaxScaler().fit_transform(X) #Use of this two transformer needs to be looked at
     assert y_noisy.sum()<len(y_noisy)*.5   #Ensure 1 is bug
     if stats:
         noise = (df.HeuBug!=df.RealBug).sum()/len(df)
@@ -36,14 +37,22 @@ def read_data(file,stats=True):
     return X,y_noisy,y_real
 
 
-def evaluate(clf,X,y_noisy,y_real,cv):
+def evaluate(clf,X,y_noisy,y_real,cv,scorers):
     scores = defaultdict(list)
     for train_id, test_id in cv.split(X,y_noisy):
         clf = clf.fit(X[train_id],y_noisy[train_id])
         pred = clf.predict(X[test_id])
-        scores['auc'].append(roc_auc_score(y_real[test_id],pred))
-        scores['gmean'].append(geometric_mean_score(y_real[test_id],pred))
-        #print(scores['auc'][-1],scores['gmean'][-1])
-    scores['auc'] = np.array(scores['auc'])
-    scores['gmean'] = np.array(scores['gmean'])
-    return scores['auc'].mean(),scores['auc'].std(),scores['gmean'].mean(),scores['gmean'].std()
+        for func in scorers:
+            scores[func.__name__].append(func(y_real[test_id],pred))
+    for func in scorers:
+        scores[func.__name__] = np.array(scores[func.__name__])
+    return scores
+
+# if __name__=='__main__':
+#     df = pd.read_csv("../JIRA/groovy-1_5_7.csv")
+#     df.drop(columns=["File", 'HeuBugCount', 'RealBugCount'], inplace=True)
+#     X = df[all_metrics].values.astype('float64')
+#     y_noisy = df.HeuBug.values.astype('int8')
+#     y_real = df.RealBug.values.astype('int8')
+#     X = np.log1p(X)  # INFORMATION LEAK, could also use power_transform
+
