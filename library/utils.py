@@ -33,15 +33,18 @@ def read_data(file,stats=True):
     if stats:
         noise = (df.HeuBug!=df.RealBug).sum()/len(df)
         imb = np.unique(y_noisy,return_counts=True)[1]
-        print(f"noise:{noise}, imb:{imb.max()/imb.min():.3f},{imb.min()},{imb.max()}, Shape:{X.shape}")
+        print(f"noise:{noise:.3f}, imb:{imb.max()/imb.min():.3f},{imb.min()},{imb.max()}, Shape:{X.shape}")
     return X,y_noisy,y_real
 
 
-def evaluate(clf,X,y_noisy,y_real,cv,scorers):
+def evaluate(clf,X,y_noisy,y_real,cv,scorers,method='predict'):
     scores = defaultdict(list)
     for train_id, test_id in cv.split(X,y_noisy):
         clf = clf.fit(X[train_id],y_noisy[train_id])
-        pred = clf.predict(X[test_id])
+        pred = getattr(clf,method)(X[test_id])
+        if method=='predict_proba':
+            assert pred.ndim==2
+            pred = pred[:,1]   #Take just the positive class
         for func in scorers:
             scores[func.__name__].append(func(y_real[test_id],pred))
     for func in scorers:
