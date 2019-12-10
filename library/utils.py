@@ -36,17 +36,19 @@ def read_data(file,stats=True):
         print(f"noise:{noise:.3f}, imb:{imb.max()/imb.min():.3f},{imb.min()},{imb.max()}, Shape:{X.shape}")
     return X,y_noisy,y_real
 
-
-def evaluate(clf,X,y_noisy,y_real,cv,scorers,method='predict'):
+NEED_PROBS = []
+def evaluate(clf,X,y_noisy,y_real,cv,scorers):
     scores = defaultdict(list)
     for train_id, test_id in cv.split(X,y_noisy):
         clf = clf.fit(X[train_id],y_noisy[train_id])
-        pred = getattr(clf,method)(X[test_id])
-        if method=='predict_proba':
-            assert pred.ndim==2
-            pred = pred[:,1]   #Take just the positive class
+        probs = clf.predict_proba(X[test_id])
+        labels = np.argmax(probs,axis=1)
         for func in scorers:
-            scores[func.__name__].append(func(y_real[test_id],pred))
+            try:
+                func([0,1,1],[.2,.6,.7])
+                scores[func.__name__].append(func(y_real[test_id],probs[:,1]))
+            except ValueError as e:
+                scores[func.__name__].append(func(y_real[test_id],labels))
     for func in scorers:
         scores[func.__name__] = np.array(scores[func.__name__])
     return scores
