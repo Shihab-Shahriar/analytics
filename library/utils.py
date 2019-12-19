@@ -36,7 +36,6 @@ def read_data(file,stats=True):
         print(f"{file} noise:{noise:.3f}, imb:{imb.max()/imb.min():.3f},{imb.min()},{imb.max()}, Shape:{X.shape}")
     return X,y_noisy,y_real
 
-NEED_PROBS = []
 def evaluate(clf,X,y_noisy,y_real,cv,scorers):
     scores = defaultdict(list)
     for train_id, test_id in cv.split(X,y_real):  #vs y_noisy, to solve no-pos-label-in-test-set bug
