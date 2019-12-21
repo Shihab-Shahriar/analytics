@@ -53,7 +53,7 @@ class FilteringEstimator(BaseEstimator, ClassifierMixin):
 
     def fit(self, X, Y,to_keep):
         Xf, Yf = self.filter_data(X,Y,to_keep)
-        print(Xf.shape,np.unique(Yf,return_counts=True)[1],np.unique(Y,return_counts=True)[1])
+        #print(Xf.shape,np.unique(Yf,return_counts=True)[1],np.unique(Y,return_counts=True)[1])
         self.estimator.fit(Xf, Yf)
         return self
 
