@@ -38,20 +38,27 @@ def read_data(file,stats=True):
 
 def evaluate(clf,X,y_noisy,y_real,cv,scorers):
     scores = defaultdict(list)
-    for train_id, test_id in cv.split(X,y_real):  #vs y_noisy, to solve no-pos-label-in-test-set bug
-        clf = clf.fit(X[train_id],y_noisy[train_id])
+    for train_id, test_id in cv.split(X,y_noisy):  #vs y_noisy, to solve no-pos-label-in-test-set bug - Changed again
+        #print(np.unique(y_noisy[train_id],return_counts=True)[1])
+        try:
+            clf = clf.fit(X[train_id],y_noisy[train_id])
+        except Exception as e:
+            print("ERROR!!!",str(e))
+            continue
         probs = clf.predict_proba(X[test_id])
-        labels = np.argmax(probs,axis=1)
         for func in scorers:
-            yp = probs[:,1]
             try:
                 func([0,1,1],[.2,.6,.7])
                 yp = probs[:,1]
             except ValueError as e:
-                yp = labels
+                yp = np.argmax(probs,axis=1)
             scores[func.__name__].append(func(y_real[test_id],yp))
+    
     for func in scorers:
-        scores[func.__name__] = np.array(scores[func.__name__])
+        if len(scores[func.__name__])>0:
+            scores[func.__name__] = np.array(scores[func.__name__])
+        else: 
+            scores[func.__name__] = np.array([0.0]) # Training failed in every fold        
     return scores
 
 # if __name__=='__main__':
