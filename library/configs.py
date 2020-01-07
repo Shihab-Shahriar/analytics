@@ -7,9 +7,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import RepeatedStratifiedKFold
 from imblearn.ensemble import BalancedBaggingClassifier, RUSBoostClassifier
 from imblearn.over_sampling import SMOTE
-from imblearn.under_sampling import RandomUnderSampler, EditedNearestNeighbours, TomekLinks, RepeatedEditedNearestNeighbours
+from imblearn.under_sampling import RandomUnderSampler, EditedNearestNeighbours, TomekLinks
 
-from sklearn.metrics import matthews_corrcoef, precision_recall_curve, auc, accuracy_score, precision_score, recall_score
+from sklearn.metrics import matthews_corrcoef, precision_recall_curve, auc
 
 IMBS = {
     'smote': SMOTE(k_neighbors=5),
@@ -43,4 +43,3 @@ def pr_rec_score(y,yp):
     prec, rec, _ = precision_recall_curve(y,yp)
     return auc(rec,prec)
 SCORERS = [matthews_corrcoef,pr_rec_score]
-
