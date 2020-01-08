@@ -33,11 +33,11 @@ bal_dt_boost = DecisionTreeClassifier(max_depth=10)
 ENSEMBLES = {
     'rboost_DT': RUSBoostClassifier(base_estimator=bal_dt_boost,algorithm='SAMME',n_estimators=50),
     'rboost_NB': RUSBoostClassifier(base_estimator=bal_nb,algorithm='SAMME',n_estimators=50),
-    'bbag_DT': BalancedBaggingClassifier(base_estimator=bal_dt_bag,n_estimators=50),
-    'bbag_NB': BalancedBaggingClassifier(base_estimator=bal_nb,n_estimators=50),
+    'bbag_DT': BalancedBaggingClassifier(base_estimator=bal_dt_bag,n_estimators=20),
+    'bbag_NB': BalancedBaggingClassifier(base_estimator=bal_nb,n_estimators=20),
 }
 
-CV = RepeatedStratifiedKFold(n_splits=5,n_repeats=5,random_state=99)
+CV = RepeatedStratifiedKFold(n_splits=5,n_repeats=2,random_state=99)
 
 def pr_rec_score(y,yp):
     prec, rec, _ = precision_recall_curve(y,yp)
