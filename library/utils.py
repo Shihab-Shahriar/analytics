@@ -1,4 +1,3 @@
-from time import perf_counter
 from collections import defaultdict
 import numpy as np
 import pandas as pd
@@ -35,6 +34,7 @@ def read_data(file,stats=True):
         noise = (df.HeuBug!=df.RealBug).sum()/len(df)
         imb = np.unique(y_noisy,return_counts=True)[1]
         print(f"{file} noise:{noise:.3f}, imb:{imb.max()/imb.min():.3f},{imb.min()},{imb.max()}, Shape:{X.shape}")
+        
     return X,y_noisy,y_real
 
 def evaluate(clf,X,y_noisy,y_real,cv,scorers):
@@ -61,20 +61,6 @@ def evaluate(clf,X,y_noisy,y_real,cv,scorers):
         else: 
             scores[func.__name__] = np.array([0.0]) # Training failed in every fold        
     return scores
-
-def experiment(DATASETS,models,df,path,CV,SCORERS):
-    for it, d in enumerate(DATASETS):
-        print(it)
-        X, y_noisy, y_real = read_data(d, stats=True)
-        for k in models:
-            print(k)
-            sd = perf_counter()
-            r = evaluate(models[k], X, y_noisy, y_real, CV, SCORERS)
-            for f in r:
-                df.loc[d, (k[0], k[1], f)] = r[f].mean()
-            print(round(perf_counter() - sd, 2), [round(r[f].mean(), 3) for f in r])
-        print()
-        df.to_csv(path)
 
 # if __name__=='__main__':
 #     df = pd.read_csv("../JIRA/groovy-1_5_7.csv")
