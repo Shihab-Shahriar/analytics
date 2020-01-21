@@ -27,16 +27,6 @@ CLFS = {
     'rf': RandomForestClassifier(n_estimators=50),
 }
 
-bal_nb = GaussianNB()
-bal_dt_bag = DecisionTreeClassifier(max_depth=20,max_features='sqrt')
-bal_dt_boost = DecisionTreeClassifier(max_depth=10)
-ENSEMBLES = {
-    'rboost_DT': RUSBoostClassifier(base_estimator=bal_dt_boost,algorithm='SAMME',n_estimators=50),
-    'rboost_NB': RUSBoostClassifier(base_estimator=bal_nb,algorithm='SAMME',n_estimators=50),
-    'bbag_DT': BalancedBaggingClassifier(base_estimator=bal_dt_bag,n_estimators=20),
-    'bbag_NB': BalancedBaggingClassifier(base_estimator=bal_nb,n_estimators=20),
-}
-
 CV = RepeatedStratifiedKFold(n_splits=5,n_repeats=5,random_state=99)
 
 def pr_rec_score(y,yp):
